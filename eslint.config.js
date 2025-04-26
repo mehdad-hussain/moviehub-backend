@@ -15,6 +15,8 @@ export default antfu(
     rules: {
       "no-console": ["warn"],
       "antfu/no-top-level-await": ["off"],
+      "style/brace-style": ["off"],
+      "antfu/if-newline": ["off"],
     },
   },
 );

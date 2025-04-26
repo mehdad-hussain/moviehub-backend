@@ -10,8 +10,12 @@ expand(envConfig);
 // Define environment schema
 const envSchema = Joi.object({
   NODE_ENV: Joi.string().valid("development", "production", "test").default("development"),
-  PORT: Joi.number().default(3000),
+  PORT: Joi.number().default(4000),
   DATABASE_URL: Joi.string().uri().required(),
+  JWT_ACCESS_SECRET: Joi.string().required(),
+  JWT_REFRESH_SECRET: Joi.string().required(),
+  JWT_ACCESS_EXPIRATION: Joi.string().default("15m"),
+  JWT_REFRESH_EXPIRATION: Joi.string().default("7d"),
 }).unknown();
 
 // Validate environment variables
@@ -39,5 +43,11 @@ export const envs = {
   port: envVars.PORT,
   database: {
     url: envVars.DATABASE_URL,
+  },
+  jwt: {
+    accessSecret: envVars.JWT_ACCESS_SECRET,
+    refreshSecret: envVars.JWT_REFRESH_SECRET,
+    accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
+    refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
   },
 };

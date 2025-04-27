@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import { connectDB } from "./config/database.js";
 import { envs } from "./config/env.js";
+import { errorHandlerMiddleware, notFoundMiddleware } from "./middleware/global.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import movieRoutes from "./routes/movie.routes.js";
 
@@ -30,14 +31,11 @@ app.use("/auth", authRoutes);
 // Movie routes
 app.use("/movies", movieRoutes);
 
+// Handle 404 errors (route not found)
+app.use(notFoundMiddleware);
+
 // Global error handler
-app.use((err, req, res, _next) => {
-  console.error("Server error:", err);
-  res.status(500).json({
-    message: "Internal server error",
-    error: envs.NODE_ENV === "development" ? err.message : undefined,
-  });
-});
+app.use(errorHandlerMiddleware);
 
 // Start the server
 app.listen(envs.port, () => {

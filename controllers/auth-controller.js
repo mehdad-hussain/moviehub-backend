@@ -41,26 +41,12 @@ export async function register(req, res) {
     });
 
     if (user) {
-      const { accessToken, refreshToken } = generateTokens(user._id);
-
-      // Save refresh token to user document
-      user.refreshToken = refreshToken;
       await user.save();
-
-      // Set refresh token as HTTP-only cookie with improved settings
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        secure: envs.nodeEnv === "production",
-        sameSite: envs.nodeEnv === "production" ? "none" : "lax",
-        path: "/",
-      });
 
       res.status(201).json({
         id: user._id,
         name: user.name,
         email: user.email,
-        accessToken,
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -121,17 +107,58 @@ export async function refreshToken(req, res) {
     const decoded = jwt.verify(refreshToken, envs.jwt.refreshSecret);
 
     // Find user with matching refresh token
-    const user = await User.findOne({ _id: decoded.id, refreshToken });
+    const user = await User.findOne({ _id: decoded.id }).select(
+      "-refreshToken -password -createdAt -updatedAt",
+    );
 
     if (!user) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
-
     const accessToken = generateAccessToken(user._id);
 
-    res.json({ accessToken });
+    res.json({
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Refresh token error:", error);
     return res.status(403).json({ message: "Invalid refresh token" });
+  }
+}
+
+// Logout user
+export async function logout(req, res) {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(200).json({ message: "Already logged out" });
+    }
+
+    // Find user with the refresh token
+    const user = await User.findOne({ refreshToken });
+
+    if (user) {
+      // Clear refresh token in database
+      user.refreshToken = "";
+      await user.save();
+    }
+
+    // Clear refresh token cookie
+    res.cookie("refreshToken", "", {
+      httpOnly: true,
+      expires: new Date(0),
+      secure: envs.nodeEnv === "production",
+      sameSite: envs.nodeEnv === "production" ? "none" : "lax",
+      path: "/",
+    });
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }

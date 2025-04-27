@@ -53,7 +53,7 @@ The API is deployed and accessible at:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/moviehub-backend.git
+   git clone https://github.com/mehdad-hussain/moviehub-backend.git
    cd moviehub-backend
    ```
 

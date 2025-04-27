@@ -1,16 +1,28 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+// eslint-disable-next-line perfectionist/sort-imports
+import http from "node:http";
 import { connectDB } from "./config/database.js";
 import { envs } from "./config/env.js";
+import { initSocket } from "./config/socket.js";
 import { errorHandlerMiddleware, notFoundMiddleware } from "./middleware/global.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import movieRoutes from "./routes/movie.routes.js";
 
-// Connect to MongoDB
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = initSocket(server);
+
+// Make io accessible to the request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 app.use(
   cors({
@@ -26,19 +38,14 @@ app.get("/", (req, res) => {
   res.json("Hello World!");
 });
 
-// Auth routes
 app.use("/auth", authRoutes);
-// Movie routes
 app.use("/movies", movieRoutes);
 
-// Handle 404 errors (route not found)
 app.use(notFoundMiddleware);
 
-// Global error handler
 app.use(errorHandlerMiddleware);
 
-// Start the server
-app.listen(envs.port, () => {
+server.listen(envs.port, () => {
   // eslint-disable-next-line no-console
   console.log(`Server running on http://localhost:${envs.port}`);
 });

@@ -1,3 +1,4 @@
+import { getIO } from "../config/socket.js";
 import Movie from "../models/movie.js";
 
 // Create a new movie
@@ -13,6 +14,9 @@ export async function createMovie(req, res) {
       genre: Array.isArray(genre) ? genre : [genre],
       imageUrl,
     });
+
+    // Emit socket event for new movie
+    getIO().emit("movie-added", movie);
 
     res.status(201).json(movie);
   } catch (error) {
@@ -82,6 +86,13 @@ export async function rateMovie(req, res) {
 
     // Save will trigger the pre-save hook to recalculate average
     await movie.save();
+
+    // Emit socket event for rating update
+    getIO().emit("rating-updated", {
+      movieId: movie._id,
+      averageRating: movie.averageRating,
+      ratingsCount: movie.ratings.length,
+    });
 
     res.json(movie);
   } catch (error) {

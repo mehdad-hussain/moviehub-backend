@@ -82,9 +82,11 @@ export async function login(req, res) {
       });
 
       res.json({
-        id: user._id,
-        name: user.name,
-        email: user.email,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
         accessToken,
       });
     } else {

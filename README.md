@@ -6,6 +6,7 @@ A robust REST API backend for a movie rating and review application built with E
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Deployment](#deployment)
 - [Setup Instructions](#setup-instructions)
 - [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
@@ -32,6 +33,12 @@ A robust REST API backend for a movie rating and review application built with E
 - **JWT** - Authentication and authorization
 - **Joi** - Validation
 - **bcryptjs** - Password hashing
+
+## Deployment
+
+The API is deployed and accessible at:
+
+- [https://moviehub-backend-6cem.onrender.com/](https://moviehub-backend-6cem.onrender.com/)
 
 ## Setup Instructions
 

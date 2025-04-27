@@ -15,6 +15,13 @@ function generateTokens(userId) {
   return { accessToken, refreshToken };
 }
 
+// Generate only access token
+function generateAccessToken(userId) {
+  return jwt.sign({ id: userId }, envs.jwt.accessSecret, {
+    expiresIn: envs.jwt.accessExpiration,
+  });
+}
+
 // Register a new user
 export async function register(req, res) {
   try {
@@ -40,16 +47,17 @@ export async function register(req, res) {
       user.refreshToken = refreshToken;
       await user.save();
 
-      // Set refresh token as HTTP-only cookie
+      // Set refresh token as HTTP-only cookie with improved settings
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         secure: envs.nodeEnv === "production",
-        sameSite: "strict",
+        sameSite: envs.nodeEnv === "production" ? "none" : "lax",
+        path: "/",
       });
 
       res.status(201).json({
-        _id: user._id,
+        id: user._id,
         name: user.name,
         email: user.email,
         accessToken,
@@ -78,16 +86,17 @@ export async function login(req, res) {
       user.refreshToken = refreshToken;
       await user.save();
 
-      // Set refresh token as HTTP-only cookie
+      // Set refresh token as HTTP-only cookie with improved settings
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         secure: envs.nodeEnv === "production",
-        sameSite: "strict",
+        sameSite: envs.nodeEnv === "production" ? "none" : "lax",
+        path: "/",
       });
 
       res.json({
-        _id: user._id,
+        id: user._id,
         name: user.name,
         email: user.email,
         accessToken,
@@ -104,7 +113,6 @@ export async function login(req, res) {
 export async function refreshToken(req, res) {
   try {
     const { refreshToken } = req.cookies;
-
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token not found" });
     }
@@ -119,22 +127,9 @@ export async function refreshToken(req, res) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
-    // Generate new tokens
-    const newTokens = generateTokens(user._id);
+    const accessToken = generateAccessToken(user._id);
 
-    // Update refresh token in database
-    user.refreshToken = newTokens.refreshToken;
-    await user.save();
-
-    // Set new refresh token as cookie
-    res.cookie("refreshToken", newTokens.refreshToken, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      secure: envs.nodeEnv === "production",
-      sameSite: "strict",
-    });
-
-    res.json({ accessToken: newTokens.accessToken });
+    res.json({ accessToken });
   } catch (error) {
     console.error("Refresh token error:", error);
     return res.status(403).json({ message: "Invalid refresh token" });

@@ -4,13 +4,20 @@ import express from "express";
 import { connectDB } from "./config/database.js";
 import { envs } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
+import movieRoutes from "./routes/movie.routes.js";
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: envs.frontendUrl,
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -20,6 +27,8 @@ app.get("/", (req, res) => {
 
 // Auth routes
 app.use("/auth", authRoutes);
+// Movie routes
+app.use("/movies", movieRoutes);
 
 // Global error handler
 app.use((err, req, res, _next) => {

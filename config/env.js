@@ -16,6 +16,7 @@ const envSchema = Joi.object({
   JWT_REFRESH_SECRET: Joi.string().required(),
   JWT_ACCESS_EXPIRATION: Joi.string().default("15m"),
   JWT_REFRESH_EXPIRATION: Joi.string().default("7d"),
+  FRONTEND_URL: Joi.string().uri().default("http://localhost:3000"),
 }).unknown();
 
 // Validate environment variables
@@ -50,4 +51,5 @@ export const envs = {
     accessExpiration: envVars.JWT_ACCESS_EXPIRATION,
     refreshExpiration: envVars.JWT_REFRESH_EXPIRATION,
   },
+  frontendUrl: envVars.FRONTEND_URL,
 };

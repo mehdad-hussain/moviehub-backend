@@ -8,6 +8,7 @@ import { envs } from "./config/env.js";
 import { initSocket } from "./config/socket.js";
 import { errorHandlerMiddleware, notFoundMiddleware } from "./middleware/global.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import movieRoutes from "./routes/movie.routes.js";
 
 connectDB();
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/movies", movieRoutes);
+app.use("/chat", chatRoutes);
 
 app.use(notFoundMiddleware);
 

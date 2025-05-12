@@ -9,8 +9,8 @@
   "keywords": [],
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
     "dev": "nodemon app.js",
+    "start": "node app.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",

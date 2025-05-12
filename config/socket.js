@@ -1,5 +1,7 @@
 import { Server } from "socket.io";
 import { envs } from "./env.js";
+import { getChatNamespace, initChatNamespace } from "./socket/chat-namespace.js";
+import { initMainNamespace } from "./socket/main-namespace.js";
 
 let io;
 
@@ -12,15 +14,9 @@ export function initSocket(server) {
     },
   });
 
-  io.on("connection", (socket) => {
-    // eslint-disable-next-line no-console
-    console.log(`User connected: ${socket.id}`);
-
-    socket.on("disconnect", () => {
-      // eslint-disable-next-line no-console
-      console.log(`User disconnected: ${socket.id}`);
-    });
-  });
+  // Initialize namespaces
+  initChatNamespace(io);
+  initMainNamespace(io);
 
   return io;
 }
@@ -31,3 +27,5 @@ export function getIO() {
   }
   return io;
 }
+
+export { getChatNamespace };

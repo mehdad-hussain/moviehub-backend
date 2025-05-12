@@ -17,6 +17,7 @@ export default antfu(
       "antfu/no-top-level-await": ["off"],
       "style/brace-style": ["off"],
       "antfu/if-newline": ["off"],
+      "style/arrow-parens": ["off"],
     },
   },
 );

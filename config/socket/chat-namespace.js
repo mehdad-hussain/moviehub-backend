@@ -4,8 +4,8 @@ import ChatMessage from "../../models/chat.js";
 import { socketAuthMiddleware } from "./middleware.js";
 
 let chatNamespace;
-// Track disconnected users by their user ID (from token)
-const disconnectedUsers = new Map(); // Map userId => {timestamp, chatState, socketId}
+const disconnectedUsers = new Map();
+const onlineUsers = new Map();
 
 //  Join a socket to all chat rooms where the user is a member
 async function joinUserRooms(socket) {
@@ -30,13 +30,25 @@ export function initChatNamespace(io) {
 
     const userId = socket.user._id.toString();
 
+    // Mark user as online
+    onlineUsers.set(userId, socket.id);
+
+    // Broadcast to all clients that this user is now online
+    chatNamespace.emit("user-online", {
+      userId,
+      user: {
+        _id: socket.user._id,
+        name: socket.user.name,
+        email: socket.user.email,
+      },
+    });
+
     // Check if this is a reconnection within our window
     if (disconnectedUsers.has(userId)) {
       console.log(`User ${socket.user.name} reconnected within grace period`);
 
-      // Here you can restore any chat state that was saved
+      // Here we can restore any chat state that was saved
       // const savedData = disconnectedUsers.get(userId);
-      // Inform the user or other players about the reconnection
       socket.emit("reconnection-successful", {
         message: "Welcome back! Your chat session was preserved.",
       });
@@ -203,12 +215,22 @@ export function initChatNamespace(io) {
     socket.on("disconnect", () => {
       console.log(`User disconnected from chat: ${socket.id}`);
 
+      // Remove from online users immediately
+      if (onlineUsers.get(userId) === socket.id) {
+        onlineUsers.delete(userId);
+
+        // Notify all clients that user went offline
+        chatNamespace.emit("user-offline", {
+          userId,
+        });
+      }
+
       // Store the disconnected user with a timestamp and any chat state
       disconnectedUsers.set(userId, {
         timestamp: Date.now(),
         socketId: socket.id,
-        // You can add any chat state here that needs to be preserved
-        chatState: {}, // Add whatever chat state you need to preserve
+        //  add any chat state here that needs to be preserved
+        chatState: {},
       });
 
       // Set a timeout to clean up if user doesn't return in 10 seconds
@@ -222,15 +244,19 @@ export function initChatNamespace(io) {
           disconnectedUsers.delete(userId);
 
           // Notify other players that this user has permanently left
-          // For example:
           chatNamespace.emit("user-permanently-disconnected", {
             userId,
             userName: socket.user.name,
           });
-
-          // Handle any chat state cleanup here
         }
-      }, 10000); // 10 seconds
+      }, 10000);
+    });
+
+    socket.on("get-online-users", () => {
+      const onlineUserIds = Array.from(onlineUsers.keys());
+      socket.emit("online-users-list", {
+        userIds: onlineUserIds,
+      });
     });
   });
 
@@ -242,4 +268,9 @@ export function getChatNamespace() {
     throw new Error("Chat namespace not initialized");
   }
   return chatNamespace;
+}
+
+// Add a method to get online users for API routes
+export function getOnlineUsers() {
+  return Array.from(onlineUsers.keys());
 }

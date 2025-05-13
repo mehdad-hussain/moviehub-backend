@@ -1,5 +1,5 @@
 import express from "express";
-import { getChatHistory, getChatUsers } from "../controllers/chat-controller.js";
+import { getChatHistory, getChatUsers, getOnlineUsers } from "../controllers/chat-controller.js";
 import {
   addRoomMembers,
   createChatRoom,
@@ -16,6 +16,7 @@ router.use(authMiddleware);
 
 // Direct message routes
 router.get("/users", getChatUsers);
+router.get("/users/online", getOnlineUsers);
 router.get("/history/:userId", getChatHistory);
 
 // Chat room routes

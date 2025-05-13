@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { getOnlineUsers as getOnlineUsersFromSocket } from "../config/socket/chat-namespace.js";
 import ChatMessage from "../models/chat.js";
 import User from "../models/user.js";
 
@@ -131,6 +132,29 @@ export async function getChatUsers(req, res) {
     ]);
 
     res.json(chatUsers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+// Get all online users
+export async function getOnlineUsers(req, res) {
+  try {
+    const onlineUserIds = getOnlineUsersFromSocket();
+
+    if (onlineUserIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Convert string IDs to ObjectId
+    const objectIds = onlineUserIds.map((id) => mongoose.Types.ObjectId.createFromHexString(id));
+
+    // Get user details for online users
+    const users = await User.find({
+      _id: { $in: objectIds },
+    }).select("name email");
+
+    res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
